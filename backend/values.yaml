@@ -1,0 +1,109 @@
+namespace: reddit-app
+
+replicaCount: 2
+
+image:
+  repository: 231498620802.dkr.ecr.us-east-1.amazonaws.com/backend-app
+  tag: "983eb1d"
+  pullPolicy: IfNotPresent
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations: {}
+
+containerPort: 8000
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 600m
+    memory: 768Mi
+
+livenessProbe:
+  httpGet:
+    path: /health/liveness/
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /health/readiness/
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+configmap:
+  name: reddit-backend-config
+  data:
+    DJANGO_DEBUG: "False"
+    DJANGO_ALLOWED_HOSTS: "api.reddit.example.com"
+    DJANGO_SECURE: "true"
+    DJANGO_HSTS_SECONDS: "31536000"
+
+secret:
+  name: reddit-backend-secret
+  external: true
+  data: {}
+
+dbSecret:
+  name: reddit-db-secret
+
+httproute:
+  enabled: true
+  name: backend
+  annotations: {}
+  parentRefs:
+    - name: reddit-gateway
+      namespace: default
+  hostnames:
+    - api.reddit.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  automount: true
+
+imagePullSecrets: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+volumeMounts: []
+volumes: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+migrateJob:
+  enabled: true
+  hook:
+    type: pre-upgrade
+    weight: 1
+  backoffLimit: 3
+
+superuserJob:
+  enabled: false

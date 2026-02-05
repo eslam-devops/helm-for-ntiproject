@@ -1,0 +1,36 @@
+namespace: gateway-system
+
+gateway:
+  enabled: true
+  name: reddit-gateway
+  gatewayClassName: nginx
+
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              expose-via-gateway: "true"
+
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: reddit-tls-secret
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              expose-via-gateway: "true"
+
+# Gateway chart should NOT manage application routes
+httproute:
+  enabled: false

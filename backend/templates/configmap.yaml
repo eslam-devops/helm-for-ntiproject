@@ -1,0 +1,11 @@
+{{- if .Values.configmap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name | default (include "backend.fullname" .) }}
+data:
+{{- range $key, $value := .Values.configmap.data }}
+  {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
+
