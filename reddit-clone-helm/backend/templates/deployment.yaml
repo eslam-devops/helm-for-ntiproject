@@ -6,7 +6,7 @@ metadata:
     {{- include "backend.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount | default 2 }}
   {{- end }}
   selector:
     matchLabels:
@@ -42,14 +42,14 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          envFrom:
+            envFrom:
             - configMapRef:
-                name: backend-config
+              name: {{ .Values.configmap.name | default (include "backend.fullname" .) }}
             - secretRef:
-                name: backend-secret
+              name: {{ .Values.secret.name | default (include "backend.fullname" .) }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.containerPort | default 8000 }}
               protocol: TCP
           {{- with .Values.livenessProbe }}
           livenessProbe:

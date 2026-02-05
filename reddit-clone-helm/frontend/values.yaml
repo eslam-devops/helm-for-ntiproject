@@ -1,86 +1,118 @@
+# Namespace for the deployment
+namespace: reddit-app
+
+# Replica count
 replicaCount: 2
 
+# Image configuration
 image:
-  repository: eslamzain99/zain-hotel-frontend
+  repository: 231498620802.dkr.ecr.us-east-1.amazonaws.com/reddit-frontend
+  tag: "983eb1d"
   pullPolicy: IfNotPresent
-  tag: "latest"
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-serviceAccount:
-  create: false
-  automount: true
-  annotations: {}
-  name: ""
-
+# Pod annotations
 podAnnotations: {}
+
+# Pod labels
 podLabels: {}
 
+# Pod security context
 podSecurityContext: {}
 
+# Container security context
 securityContext: {}
 
+# Service configuration
 service:
   type: ClusterIP
   port: 80
-
-ingress:
-  enabled: false
-  className: ""
+  targetPort: 3000
   annotations: {}
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
 
-httpRoute:
+# Container port
+containerPort: 3000
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 300m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 15
+
+# Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 3000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+# ConfigMap configuration
+configmap:
+  name: frontend-config
+  data:
+    NEXT_PUBLIC_API_URL: "https://api.reddit.example.com"
+
+# HTTPRoute configuration for Istio/Gateway API
+httproute:
   enabled: true
+  name: frontend
   annotations: {}
   parentRefs:
-    - name: gateway
-      namespace: reddit
+    - name: reddit-gateway
+      namespace: default
   hostnames:
-    - frontend.local
+    - frontend.reddit.example.com
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
 
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+# Service Account
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
 
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
+# Image pull secrets
+imagePullSecrets: []
 
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
+# Node selector
+nodeSelector: {}
 
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Autoscaling configuration
 autoscaling:
   enabled: false
   minReplicas: 1
-  maxReplicas: 100
+  maxReplicas: 10
   targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
 
-volumes: []
-
+# Volume mounts
 volumeMounts: []
 
-nodeSelector: {}
+# Volumes
+volumes: []
 
-tolerations: []
+# Name override
+nameOverride: ""
 
-affinity: {}
+# Fullname override
+fullnameOverride: ""

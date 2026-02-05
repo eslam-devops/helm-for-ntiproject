@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/crds/application-crd.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,9 +8,9 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/eslam-devops/reddit-clone-helm.git
+    repoURL: https://github.com/eslam-devops/helm-for-ntiproject.git
     targetRevision: main
-    path: frontend
+    path: reddit-clone-helm/frontend
 
   destination:
     server: https://kubernetes.default.svc

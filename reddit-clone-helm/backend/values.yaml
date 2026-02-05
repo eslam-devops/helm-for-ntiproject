@@ -1,96 +1,109 @@
+namespace: reddit-app
+
 replicaCount: 2
 
 image:
-  repository: eslamzain99/zain-hotel-backend
+  repository: 231498620802.dkr.ecr.us-east-1.amazonaws.com/backend-app
+  tag: "983eb1d"
   pullPolicy: IfNotPresent
-  tag: "latest"
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-serviceAccount:
-  create: true
-  automount: true
-  annotations: {}
-  name: ""
 
 podAnnotations: {}
 podLabels: {}
 
 podSecurityContext: {}
-
 securityContext: {}
-
-config:
-  DB_HOST: database
-  DB_PORT: "5432"
-  DB_USER: zain
-  DB_NAME: hotel_db
-  PORT: "8000"
-
-secrets:
-  DB_PASSWORD: zain123
 
 service:
   type: ClusterIP
   port: 8000
-
-ingress:
-  enabled: false
-  className: ""
+  targetPort: 8000
   annotations: {}
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
 
-httpRoute:
+containerPort: 8000
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 600m
+    memory: 768Mi
+
+livenessProbe:
+  httpGet:
+    path: /health/liveness/
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /health/readiness/
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+configmap:
+  name: reddit-backend-config
+  data:
+    DJANGO_DEBUG: "False"
+    DJANGO_ALLOWED_HOSTS: "api.reddit.example.com"
+    DJANGO_SECURE: "true"
+    DJANGO_HSTS_SECONDS: "31536000"
+
+secret:
+  name: reddit-backend-secret
+  external: true
+  data: {}
+
+dbSecret:
+  name: reddit-db-secret
+
+httproute:
   enabled: true
+  name: backend
   annotations: {}
   parentRefs:
-    - name: gateway
-      namespace: reddit
+    - name: reddit-gateway
+      namespace: default
   hostnames:
-    - backend.local
+    - api.reddit.example.com
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /api
 
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  automount: true
 
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8000
-
-readinessProbe:
-  httpGet:
-    path: /health
-    port: 8000
+imagePullSecrets: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
 
 autoscaling:
   enabled: false
   minReplicas: 1
-  maxReplicas: 100
+  maxReplicas: 10
   targetCPUUtilizationPercentage: 80
-
-volumes: []
+  targetMemoryUtilizationPercentage: 80
 
 volumeMounts: []
+volumes: []
 
-nodeSelector: {}
+nameOverride: ""
+fullnameOverride: ""
 
-tolerations: []
+migrateJob:
+  enabled: true
+  hook:
+    type: pre-upgrade
+    weight: 1
+  backoffLimit: 3
 
-affinity: {}
+superuserJob:
+  enabled: false

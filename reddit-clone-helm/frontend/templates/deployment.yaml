@@ -6,7 +6,7 @@ metadata:
     {{- include "frontend.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount | default 2 }}
   {{- end }}
   selector:
     matchLabels:
@@ -40,9 +40,14 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.configmap }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name | default (include "frontend.fullname" .) }}
+          {{- end }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.containerPort | default 3000 }}
               protocol: TCP
           {{- with .Values.livenessProbe }}
           livenessProbe:
