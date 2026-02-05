@@ -42,11 +42,11 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-            envFrom:
+          envFrom:
             - configMapRef:
-              name: {{ .Values.configmap.name | default (include "backend.fullname" .) }}
+                name: {{ .Values.configmap.name | default (include "backend.fullname" .) }}
             - secretRef:
-              name: {{ .Values.secret.name | default (include "backend.fullname" .) }}
+                name: {{ .Values.secret.name | default (include "backend.fullname" .) }}
           ports:
             - name: http
               containerPort: {{ .Values.containerPort | default 8000 }}
